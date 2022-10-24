@@ -9,11 +9,14 @@ IOA_READING_PATH = "/mnt/ioa"
 
 
 def get_readings(max_entries):
-    files = [
-        p
-        for p in os.listdir(IOA_READING_PATH)
-        if path.isfile(path.join(IOA_READING_PATH, p))
-    ]
+    files = sorted(
+        [
+            p
+            for p in os.listdir(IOA_READING_PATH)
+            if path.isfile(path.join(IOA_READING_PATH, p))
+        ],
+        reverse=True,
+    )
 
     readings = []
     for fpath in files:
@@ -64,12 +67,15 @@ def publish_reading(reading_obj):
 
 
 def lambda_handler(event, context):
-    # return event
     method = event["requestContext"]["http"]["method"]
     if method == "GET":
-        max_entries = max(event["pathParameters"].get("number_entries", 10), 1)
-
-        if type(max_entries) is not int:
+        path_param_obj = (
+            "pathParameters" if "pathParameters" in event else "queryStringParameters"
+        )
+        try:
+            max_entries = event[path_param_obj].get("number_entries", 5)
+            max_entries = max(int(max_entries), 1)
+        except:
             max_entries = 5
 
         return get_readings(max_entries)
