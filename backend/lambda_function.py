@@ -23,7 +23,8 @@ def get_readings(max_entries):
         p = path.join(IOA_READING_PATH, fpath)
         with open(p, "r") as f:
             fcntl.flock(f, fcntl.LOCK_SH)
-            readings.extend(json.load(f).sort(key=lambda x: -x["timestamp"]))
+            readings_by_time = sorted(json.load(f), key=lambda x: -x["timestamp"])
+            readings.extend(readings_by_time)
             fcntl.flock(f, fcntl.LOCK_UN)
 
     if len(readings) > max_entries:
@@ -34,20 +35,23 @@ def get_readings(max_entries):
 
 def publish_reading(reading_obj):
     latest_reading = max(
-        p
-        for p in os.listdir(IOA_READING_PATH)
-        if path.isfile(path.join(IOA_READING_PATH, p))  # and p != "profiles.json"
+        (
+            p
+            for p in os.listdir(IOA_READING_PATH)
+            if path.isfile(path.join(IOA_READING_PATH, p))
+        ),
+        default="",
     )
 
     t = time.gmtime(reading_obj["timestamp"])
-    new_reading = time.strftime("%Y_%M_%d_%H.json", t)
+    new_reading = time.strftime("%Y_%m_%d_%H.json", t)
 
     latest_file = path.join(IOA_READING_PATH, max(latest_reading, new_reading))
     with open(latest_file, "w+") as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         hour_readings = json.load(f) if latest_reading == new_reading else []
         hour_readings.append(reading_obj)
-        json.dump([hour_readings], f)
+        json.dump(hour_readings, f)
         fcntl.flock(f, fcntl.LOCK_UN)
 
 
@@ -61,10 +65,15 @@ def lambda_handler(event, context):
 
         return get_readings(max_entries)
     elif method == "POST":
-        reading = event["body"]
+        try:
+            reading = json.loads(event["body"])
+        except:
+            return "Invalid Body"
 
-        if "timestamp" not in reading:
+        if "timeEpoch" not in event["requestContext"]:
             reading["timestamp"] = datetime.now().timestamp()
+        else:
+            reading["timestamp"] = event["requestContext"]["timeEpoch"] / 1000
 
         if "moisture" not in reading:
             reading["moisture"] = 0.0
@@ -74,5 +83,11 @@ def lambda_handler(event, context):
 
         publish_reading(reading)
         return "OK"
+    elif method == "DELETE":
+        file = event["body"]
+        os.remove(f"/mnt/ioa/{file}")
+        return f"OK. DELETED /mnt/ioa/{file}"
+    elif method == "PUT":
+        return os.listdir(IOA_READING_PATH)
     else:
         return "Unsupported"
