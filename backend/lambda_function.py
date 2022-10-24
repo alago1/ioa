@@ -12,7 +12,7 @@ def get_readings(max_entries):
     files = [
         p
         for p in os.listdir(IOA_READING_PATH)
-        if path.isfile(path.join(IOA_READING_PATH, p))  # and p != "profiles.json"
+        if path.isfile(path.join(IOA_READING_PATH, p))
     ]
 
     readings = []
@@ -47,15 +47,24 @@ def publish_reading(reading_obj):
     new_reading = time.strftime("%Y_%m_%d_%H.json", t)
 
     latest_file = path.join(IOA_READING_PATH, max(latest_reading, new_reading))
-    with open(latest_file, "w+") as f:
+    if new_reading == latest_reading:
+        with open(latest_file, "r") as f:
+            fcntl.flock(f, fcntl.LOCK_SH)
+            hour_readings = json.load(f)
+            fcntl.flock(f, fcntl.LOCK_UN)
+    else:
+        hour_readings = []
+
+    hour_readings.append(reading_obj)
+
+    with open(latest_file, "w") as f:
         fcntl.flock(f, fcntl.LOCK_EX)
-        hour_readings = json.load(f) if latest_reading == new_reading else []
-        hour_readings.append(reading_obj)
         json.dump(hour_readings, f)
         fcntl.flock(f, fcntl.LOCK_UN)
 
 
 def lambda_handler(event, context):
+    # return event
     method = event["requestContext"]["http"]["method"]
     if method == "GET":
         max_entries = max(event["pathParameters"].get("number_entries", 10), 1)
@@ -81,7 +90,13 @@ def lambda_handler(event, context):
         if "profile" not in reading:
             reading["profile"] = None
 
-        publish_reading(reading)
+        reading_obj = {
+            "timestamp": reading["timestamp"],
+            "moisture": reading["moisture"],
+            "profile": reading["profile"],
+        }
+
+        publish_reading(reading_obj)
         return "OK"
     elif method == "DELETE":
         file = event["body"]
@@ -89,5 +104,12 @@ def lambda_handler(event, context):
         return f"OK. DELETED /mnt/ioa/{file}"
     elif method == "PUT":
         return os.listdir(IOA_READING_PATH)
+    elif method == "PATCH":
+        file = event["body"]
+        with open(f"/mnt/ioa/{file}", "r") as f:
+            fcntl.flock(f, fcntl.LOCK_SH)
+            a = f.read()
+            fcntl.flock(f, fcntl.LOCK_UN)
+        return a
     else:
         return "Unsupported"
