@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Text, View, StyleSheet, Dimensions } from "react-native";
+import { Text, View, StyleSheet, Dimensions, Button } from "react-native";
 import { getProfileAlias, getTargetMoisture } from "../util/storage";
 import { IOA_Reading } from "../util/types";
 import Graph from "./Graph";
@@ -11,6 +11,7 @@ function capitalized(s: string) {
 interface ProfileTabProps {
   profileId: string;
   data: Array<IOA_Reading>;
+  navigation: any;
 }
 
 export default function ProfileTab(props: ProfileTabProps) {
@@ -45,7 +46,14 @@ export default function ProfileTab(props: ProfileTabProps) {
   // };
 
   return (
-    <View style={styles.tab}>
+    <View
+      style={styles.tab}
+      onTouchEnd={() =>
+        props.navigation.navigate("ProfileScreen", {
+          readings: props.data,
+        })
+      }
+    >
       <Text style={styles.profileName} numberOfLines={1}>
         {capitalized(shownName)}
       </Text>

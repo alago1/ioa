@@ -11,14 +11,23 @@ const fetchIOAReadings = async () =>
     response.json()
   );
 
-export default function ProfileList() {
+interface ProfileListProps {
+  navigation: any;
+}
+
+export default function ProfileList(props: ProfileListProps) {
   const { data } = useQuery(["readings"], fetchIOAReadings);
   const readings = APIResponseToIOAReadings(data);
 
   return (
     <View style={styles.container}>
       {readings.map((e) => (
-        <ProfileTab profileId={e[0]} key={e[0]} data={e[1]} />
+        <ProfileTab
+          profileId={e[0]}
+          key={e[0]}
+          data={e[1]}
+          navigation={props.navigation}
+        />
       ))}
       <StatusBar style="auto" />
     </View>
