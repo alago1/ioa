@@ -5,7 +5,6 @@ import { APIResponseToIOAReadings } from "../util/conversion";
 import ProfileTab from "./ProfileTab";
 
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 
 const fetchIOAReadings = async () =>
   fetch(`${READINGS_API_URL}?number_entries=5`).then((response) =>
@@ -18,17 +17,9 @@ export default function ProfileList() {
 
   return (
     <View style={styles.container}>
-      {/* <Text>Open up App.tsx to start working on your app!</Text> */}
-      <View>
-        {/* {JSON.stringify(readings)} */}
-        {readings.map((e) => (
-          <Text>{JSON.stringify(e[1])}</Text>
-        ))}
-        {/* ?.map((e) => (
-          <Text>{JSON.stringify(e[1])}</Text>
-        ))} */}
-      </View>
-      {/* <ProfileTab profileName="Plant1" /> */}
+      {readings.map((e) => (
+        <ProfileTab profileId={e[0]} key={e[0]} data={e[1]} />
+      ))}
       <StatusBar style="auto" />
     </View>
   );
@@ -37,8 +28,9 @@ export default function ProfileList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#171DE8",
     alignItems: "center",
-    justifyContent: "center",
+    paddingTop: 50,
+    paddingHorizontal: 100,
   },
 });

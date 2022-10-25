@@ -3,8 +3,6 @@ import { IOA_Reading, ProfileReadingsMap } from "./types";
 export const APIResponseToIOAReadings = (
   data: any
 ): Array<[string, IOA_Reading[]]> => {
-  console.log("Data being converted:");
-  console.log(data);
   if (!Array.isArray(data)) return [];
 
   const profileToReadings: ProfileReadingsMap = new Map();
@@ -16,7 +14,7 @@ export const APIResponseToIOAReadings = (
     };
 
     if (
-      !Object.hasOwn(e, "timestamp") ||
+      !e.hasOwnProperty("timestamp") ||
       typeof e.timestamp != "number" ||
       e.timestamp < 0
     )
@@ -24,7 +22,7 @@ export const APIResponseToIOAReadings = (
 
     reading.timestamp = e.timestamp;
 
-    if (!Object.hasOwn(e, "moisture")) return;
+    if (!e.hasOwnProperty("moisture")) return;
 
     if (typeof e.moisture === "string") {
       try {
@@ -36,7 +34,7 @@ export const APIResponseToIOAReadings = (
 
     if (e.moisutre < 0 || e.moisture > 100) return;
 
-    if (!Object.hasOwn(e, "profile") || e.profile == null) return;
+    if (!e.hasOwnProperty("profile") || e.profile == null) return;
 
     if (!profileToReadings.has(e.profile))
       profileToReadings.set(e.profile, new Array());
@@ -48,5 +46,7 @@ export const APIResponseToIOAReadings = (
     });
   });
 
-  return Array.from(profileToReadings);
+  const out = Array.from(profileToReadings);
+  out.forEach((v) => v[1].sort((a, b) => a.timestamp - b.timestamp));
+  return out;
 };
