@@ -37,7 +37,7 @@ export default function ProfileList(props: ProfileListProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#171DE8",
+    backgroundColor: "#EDFDFF",
     alignItems: "center",
     paddingTop: 50,
     paddingHorizontal: 100,
