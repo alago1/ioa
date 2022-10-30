@@ -16,57 +16,63 @@ interface ProfileTabProps {
 }
 
 export default function ProfileTab(props: ProfileTabProps) {
-  const alias = useQuery([props.profileId], () =>
+  const alias = useQuery([props.profileId, "alias"], () =>
     getProfileAlias(props.profileId)
   );
-  const targetMoisture = useQuery([props.profileId], () =>
+  const targetMoisture = useQuery([props.profileId, "targetMoisture"], () =>
     getTargetMoisture(props.profileId)
   );
+
   const shownName = alias.data || props.profileId;
 
   const graphData = props.data.map((e) => ({
     value: e.moisture,
     dataPointText: `${Math.round(e.moisture * 10) / 10}%`,
+    label: new Date(e.timestamp * 1000).toLocaleTimeString("en-US", {
+      timeZone: "America/New_York",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
   }));
-
-  // const graphData = {
-  //   labels: props.data.map((e) =>
-  //     new Date(e.timestamp * 1000).toLocaleTimeString("en-US", {
-  //       timeZone: "America/New_York",
-  //       hour: "2-digit",
-  //       minute: "2-digit",
-  //     })
-  //   ),
-  //   datasets: [
-  //     {
-  //       data: props.data.map((e) => e.moisture),
-  //       strokeWidth: 5,
-  //       color: (opacity = 1) => `rgba(0, 0, 244, ${opacity})`,
-  //     },
-  //   ],
-  // };
 
   return (
     <View
       style={styles.tab}
       onTouchEnd={() =>
-        props.navigation.navigate("ProfileScreen", {
-          readings: props.data,
+        props.navigation.navigate("Detailed Report", {
+          profileId: props.profileId,
         })
-      }>
+      }
+    >
       <Text style={styles.profileName} numberOfLines={1}>
         {capitalized(shownName)}
       </Text>
-      <View style={[styles.container, {flexDirection: "row"}]}>
-        <View style={{flex: 3}}>
-          <Graph size="mini" data={graphData}/>
+      <View style={styles.container}>
+        <View style={{ flex: 3 }}>
+          <Graph size="mini" data={graphData} />
         </View>
-        <View style={[{flex: 1}, {alignSelf: "center"}, {flexDirection: "column"}]}>
-          <View style={[{flex: 0},styles.text_region]}>
+        <View
+          style={{
+            flex: 1,
+            alignSelf: "flex-start",
+            flexDirection: "column",
+          }}
+        >
+          <View style={styles.text_region}>
             <Text style={styles.text_region_text}>Current</Text>
-            <Chip style={styles.chip_obj} variant="outlined" label={`${Math.round(props.data[props.data.length - 1].moisture * 10) / 10}%`}/>
+            <Chip
+              style={styles.chip_obj}
+              variant="outlined"
+              label={`${
+                Math.round(props.data[props.data.length - 1].moisture * 10) / 10
+              }%`}
+            />
             <Text style={styles.text_region_text}>Target</Text>
-            <Chip style={styles.chip_obj} variant="outlined" label={`${Math.round((targetMoisture.data ?? 50) * 10) / 10}%`}/>
+            <Chip
+              style={styles.chip_obj}
+              variant="outlined"
+              label={`${Math.round((targetMoisture.data ?? 50) * 10) / 10}%`}
+            />
           </View>
         </View>
       </View>
@@ -82,20 +88,22 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     borderRadius: 20,
     backgroundColor: "#B0C4DE",
-    alignContent: "center"
+    alignContent: "center",
   },
   container: {
     display: "flex",
     alignItems: "center",
     borderRadius: 5,
-    marginBottom: -20
+    marginBottom: -20,
+    flexDirection: "row",
   },
   text_region: {
-    alignItems: "center"
+    alignItems: "center",
+    flex: 0,
   },
   text_region_text: {
     fontSize: 10,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   profileName: {
     fontSize: 20,
@@ -105,6 +113,6 @@ const styles = StyleSheet.create({
   },
   chip_obj: {
     borderRadius: 25,
-    backgroundColor: "#90EE90"
+    backgroundColor: "#90EE90",
   },
 });

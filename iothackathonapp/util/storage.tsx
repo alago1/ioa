@@ -36,23 +36,26 @@ export const updateProfileAlias = async (profileId: string, alias: string) => {
   };
   const current = await AsyncStorage.getItem(profileId);
   if (current != null) {
-    newEntry.targetMoisture = JSON.parse(current).targetMoisture;
+    newEntry.targetMoisture = JSON.parse(current).targetMoisture ?? 50.0;
   }
   await AsyncStorage.setItem(profileId, JSON.stringify(newEntry));
 };
 
 export const updateTargetMoisture = async (
   profileId: string,
-  targetMoisture: number
+  targetMoisture: number | string
 ) => {
   const newEntry = {
     alias: profileId,
     targetMoisture: targetMoisture,
   };
 
+  if (typeof targetMoisture === "string")
+    newEntry.targetMoisture = parseFloat(targetMoisture);
+
   const current = await AsyncStorage.getItem(profileId);
   if (current != null) {
-    newEntry.alias = JSON.parse(current).alias;
+    newEntry.alias = JSON.parse(current).alias ?? profileId;
   }
   await AsyncStorage.setItem(profileId, JSON.stringify(newEntry));
 };

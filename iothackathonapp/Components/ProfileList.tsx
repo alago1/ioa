@@ -1,26 +1,21 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
-import { READINGS_API_URL } from "../util/constants";
+import { SafeAreaView, StyleSheet } from "react-native";
+import { fetchIOAReadings } from "../util/query";
 import { APIResponseToIOAReadings } from "../util/conversion";
 import ProfileTab from "./ProfileTab";
 
 import { useQuery } from "@tanstack/react-query";
-
-const fetchIOAReadings = async () =>
-  fetch(`${READINGS_API_URL}?number_entries=5`).then((response) =>
-    response.json()
-  );
 
 interface ProfileListProps {
   navigation: any;
 }
 
 export default function ProfileList(props: ProfileListProps) {
-  const { data } = useQuery(["readings"], fetchIOAReadings);
+  const { data } = useQuery(["readings"], () => fetchIOAReadings(5));
   const readings = APIResponseToIOAReadings(data);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {readings.map((e) => (
         <ProfileTab
           profileId={e[0]}
@@ -30,7 +25,7 @@ export default function ProfileList(props: ProfileListProps) {
         />
       ))}
       <StatusBar style="auto" />
-    </View>
+    </SafeAreaView>
   );
 }
 
