@@ -18,7 +18,9 @@ import {
 } from "../util/storage";
 import Graph from "./Graph";
 import { queryClient } from "../util/query";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
+
+// @ts-ignore
 import edit_button from "../assets/edit-button.png";
 
 interface ProfileScreenProps {
@@ -72,6 +74,27 @@ export default function ProfileScreen(props: ProfileScreenProps) {
     return out;
   });
 
+  useEffect(() => {
+    props.navigation.addListener("beforeRemove", async (e: any) => {
+      if (profileAlias !== storedAlias.data && profileAlias !== "") {
+        await updateProfileAlias(profileId, profileAlias);
+        queryClient.invalidateQueries([profileId, "alias"]);
+      }
+
+      const target = parseFloat(targetMoisture);
+      if (!isNaN(target) && target !== storedTargetMoisture.data) {
+        await updateTargetMoisture(profileId, target);
+        queryClient.invalidateQueries([profileId, "targetMoisture"]);
+      }
+    });
+  }, [
+    props.navigation,
+    profileAlias,
+    storedAlias.data,
+    targetMoisture,
+    storedTargetMoisture.data,
+  ]);
+
   return (
     <SafeAreaView style={styles.outerContainer}>
       <View style={styles.inputsContainer}>
@@ -86,10 +109,6 @@ export default function ProfileScreen(props: ProfileScreenProps) {
             ref={profileInputRef}
             placeholder="Name"
             placeholderTextColor="#00ffff"
-            onBlur={() => {
-              updateProfileAlias(profileId, profileAlias);
-              queryClient.invalidateQueries([profileId, "alias"]);
-            }}
           />
           <Image
             source={edit_button}
@@ -108,9 +127,6 @@ export default function ProfileScreen(props: ProfileScreenProps) {
             ref={moistureInputRef}
             placeholder="50.0"
             style={{ fontSize: 15 }}
-            onBlur={() => {
-              updateTargetMoisture(profileId, targetMoisture);
-            }}
           />
           <Image
             source={edit_button}

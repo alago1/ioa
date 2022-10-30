@@ -37,7 +37,7 @@ export default function ProfileTab(props: ProfileTabProps) {
 
   return (
     <View
-      style={styles.tab}
+      style={[styles.tab, styles.elevation]}
       onTouchEnd={() =>
         props.navigation.navigate("Detailed Report", {
           profileId: props.profileId,
@@ -114,5 +114,15 @@ const styles = StyleSheet.create({
   chip_obj: {
     borderRadius: 25,
     backgroundColor: "#90EE90",
+  },
+  shadowProp: {
+    shadowColor: "#171717",
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  elevation: {
+    elevation: 10,
+    shadowColor: "#000000",
   },
 });
