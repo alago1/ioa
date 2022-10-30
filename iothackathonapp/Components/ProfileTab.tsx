@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Text, View, StyleSheet, Dimensions, Button } from "react-native";
+import { Text, View, StyleSheet, Dimensions } from "react-native";
 import { getProfileAlias, getTargetMoisture } from "../util/storage";
 import { IOA_Reading } from "../util/types";
+import { Chip } from "@react-native-material/core";
 import Graph from "./Graph";
 
 function capitalized(s: string) {
@@ -15,42 +16,31 @@ interface ProfileTabProps {
 }
 
 export default function ProfileTab(props: ProfileTabProps) {
-  const alias = useQuery([props.profileId], () =>
+  const alias = useQuery([props.profileId, "alias"], () =>
     getProfileAlias(props.profileId)
   );
-  const targetMoisture = useQuery([props.profileId], () =>
+  const targetMoisture = useQuery([props.profileId, "targetMoisture"], () =>
     getTargetMoisture(props.profileId)
   );
+
   const shownName = alias.data || props.profileId;
 
   const graphData = props.data.map((e) => ({
     value: e.moisture,
     dataPointText: `${Math.round(e.moisture * 10) / 10}%`,
+    label: new Date(e.timestamp * 1000).toLocaleTimeString("en-US", {
+      timeZone: "America/New_York",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
   }));
-
-  // const graphData = {
-  //   labels: props.data.map((e) =>
-  //     new Date(e.timestamp * 1000).toLocaleTimeString("en-US", {
-  //       timeZone: "America/New_York",
-  //       hour: "2-digit",
-  //       minute: "2-digit",
-  //     })
-  //   ),
-  //   datasets: [
-  //     {
-  //       data: props.data.map((e) => e.moisture),
-  //       strokeWidth: 5,
-  //       color: (opacity = 1) => `rgba(0, 0, 244, ${opacity})`,
-  //     },
-  //   ],
-  // };
 
   return (
     <View
-      style={styles.tab}
+      style={[styles.tab, styles.elevation]}
       onTouchEnd={() =>
-        props.navigation.navigate("ProfileScreen", {
-          readings: props.data,
+        props.navigation.navigate("Detailed Report", {
+          profileId: props.profileId,
         })
       }
     >
@@ -58,16 +48,32 @@ export default function ProfileTab(props: ProfileTabProps) {
         {capitalized(shownName)}
       </Text>
       <View style={styles.container}>
-        <View>
+        <View style={{ flex: 3 }}>
           <Graph size="mini" data={graphData} />
         </View>
-        <View style={styles.textColumn}>
-          <Text>{`Moisture: ${
-            Math.round(props.data[props.data.length - 1].moisture * 10) / 10
-          }%`}</Text>
-          <Text>{`Target: ${
-            Math.round((targetMoisture.data ?? 50) * 10) / 10
-          }%`}</Text>
+        <View
+          style={{
+            flex: 1,
+            alignSelf: "flex-start",
+            flexDirection: "column",
+          }}
+        >
+          <View style={styles.text_region}>
+            <Text style={styles.text_region_text}>Current</Text>
+            <Chip
+              style={styles.chip_obj}
+              variant="outlined"
+              label={`${
+                Math.round(props.data[props.data.length - 1].moisture * 10) / 10
+              }%`}
+            />
+            <Text style={styles.text_region_text}>Target</Text>
+            <Chip
+              style={styles.chip_obj}
+              variant="outlined"
+              label={`${Math.round((targetMoisture.data ?? 50) * 10) / 10}%`}
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -79,22 +85,44 @@ const styles = StyleSheet.create({
     padding: 10,
     width: Dimensions.get("window").width - 20,
     borderColor: "black",
-    borderWidth: 2,
-    borderRadius: 15,
-    backgroundColor: "#4D38FA",
+    borderWidth: 0,
+    borderRadius: 20,
+    backgroundColor: "#B0C4DE",
+    alignContent: "center",
   },
   container: {
     display: "flex",
-    flexDirection: "row",
     alignItems: "center",
+    borderRadius: 5,
+    marginBottom: -20,
+    flexDirection: "row",
+  },
+  text_region: {
+    alignItems: "center",
+    flex: 0,
+  },
+  text_region_text: {
+    fontSize: 10,
+    fontWeight: "bold",
   },
   profileName: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 5,
     overflow: "hidden",
   },
-  textColumn: {
-    // flex: 1,
+  chip_obj: {
+    borderRadius: 25,
+    backgroundColor: "#90EE90",
+  },
+  shadowProp: {
+    shadowColor: "#171717",
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  elevation: {
+    elevation: 10,
+    shadowColor: "#000000",
   },
 });
